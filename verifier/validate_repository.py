@@ -27,6 +27,13 @@ def main() -> int:
                 raise ValueError(
                     f"workflow action is not pinned by full SHA: {workflow.name}: {line}"
                 )
+        if workflow.name == "anchor.yml" and (
+            "--json isImmutable" not in text
+            or 'test "$immutable" = true' not in text
+        ):
+            raise ValueError(
+                "anchor workflow does not fail closed on a mutable release"
+            )
     completed = subprocess.run(
         ["git", "ls-files"],
         cwd=root,

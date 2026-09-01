@@ -47,17 +47,6 @@ jobs:
         with:
           cosign-release: v3.1.3
 
-      - name: Require immutable releases before accepting evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            "repos/$GITHUB_REPOSITORY/immutable-releases" \
-            --jq '.enabled == true' | grep -Fx true
-
       - name: Verify candidate scope and operator signature
         env:
           SUBJECT_TYPE: ${{ inputs.subject_type }}
@@ -182,7 +171,7 @@ jobs:
             --workflow-commit-sha "$GITHUB_SHA" \
             --output release/anchor-receipt.json
 
-      - name: Publish immutable release assets
+      - name: Publish and require immutable release assets
         env:
           GH_TOKEN: ${{ github.token }}
           SUBJECT_TYPE: ${{ inputs.subject_type }}
@@ -202,3 +191,10 @@ jobs:
             --title "$SUBJECT_TYPE $SUBJECT_SHA256" \
             --notes "Consequa canonical evidence anchor. Releases must be configured immutable." \
             release/*
+          immutable="$(
+            gh release view "$tag" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json isImmutable \
+              --jq .isImmutable
+          )"
+          test "$immutable" = true
