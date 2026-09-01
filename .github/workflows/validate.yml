@@ -1,0 +1,24 @@
+name: Validate evidence ledger
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-ledger:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out ledger
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - name: Validate repository policy
+        run: python3 verifier/validate_repository.py
+
+      - name: Compile dependency-free tooling
+        run: python3 -m compileall -q publisher verifier
