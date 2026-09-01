@@ -1,0 +1,204 @@
+name: Anchor Consequa evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_commit:
+        description: Exact candidate commit containing only the pending evidence record
+        required: true
+        type: string
+      subject_type:
+        description: Consequa evidence contract name
+        required: true
+        type: string
+      subject_sha256:
+        description: Canonical domain-separated subject digest
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: consequa-evidence-anchor
+  cancel-in-progress: false
+
+jobs:
+  verify-sign-anchor-release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out trusted verifier and key registry
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          path: trusted
+
+      - name: Check out exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          persist-credentials: false
+          path: candidate
+          fetch-depth: 2
+
+      - name: Install pinned Cosign
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62
+        with:
+          cosign-release: v3.1.3
+
+      - name: Require immutable releases before accepting evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "repos/$GITHUB_REPOSITORY/immutable-releases" \
+            --jq '.enabled == true' | grep -Fx true
+
+      - name: Verify candidate scope and operator signature
+        env:
+          SUBJECT_TYPE: ${{ inputs.subject_type }}
+          SUBJECT_SHA256: ${{ inputs.subject_sha256 }}
+          CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$SUBJECT_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$CANDIDATE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          pending="candidate/pending/$SUBJECT_SHA256"
+          test -f "$pending/subject.json"
+          test -f "$pending/signature.json"
+          scope_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["campaign_scope_id"])' "$pending/subject.json")"
+          test -f "trusted/campaigns/$scope_id/campaign-public.pem"
+          test -f "trusted/campaigns/$scope_id/operator-root-public.pem"
+          test -f "trusted/campaigns/$scope_id/campaign-key-certificate.json"
+          test -f "trusted/campaigns/$scope_id/campaign-key-certificate.sig.json"
+          python3 trusted/verifier/verify_subject.py \
+            --subject-type CampaignKeyCertificate \
+            --subject "trusted/campaigns/$scope_id/campaign-key-certificate.json" \
+            --signature "trusted/campaigns/$scope_id/campaign-key-certificate.sig.json" \
+            --public-key "trusted/campaigns/$scope_id/operator-root-public.pem"
+          python3 - "$scope_id" <<'PY'
+          import datetime, json, pathlib, sys
+          root = pathlib.Path("trusted/campaigns") / sys.argv[1]
+          certificate = json.loads((root / "campaign-key-certificate.json").read_text())
+          if certificate["campaign_scope_id"] != sys.argv[1]:
+              raise SystemExit("campaign key certificate scope mismatch")
+          if certificate["campaign_public_key_pem"].encode("ascii") != (root / "campaign-public.pem").read_bytes():
+              raise SystemExit("campaign public key differs from its root certificate")
+          now = datetime.datetime.now(datetime.timezone.utc)
+          start = datetime.datetime.fromisoformat(certificate["valid_from_utc"].replace("Z", "+00:00"))
+          end = datetime.datetime.fromisoformat(certificate["valid_until_utc"].replace("Z", "+00:00"))
+          if not start <= now < end:
+              raise SystemExit("campaign key certificate is outside its validity interval")
+          PY
+          case "$SUBJECT_TYPE" in
+            PairIntent|EvidenceCheckpoint)
+              signing_key="trusted/campaigns/$scope_id/campaign-public.pem"
+              ;;
+            EvaluationDeclaration|DisclosureRequest|DisclosureReceipt|CampaignKeyCertificate|EvidenceReleaseManifest|CompletenessCertificate)
+              signing_key="trusted/campaigns/$scope_id/operator-root-public.pem"
+              ;;
+            *)
+              echo "unsupported subject type" >&2
+              exit 1
+              ;;
+          esac
+          python3 trusted/verifier/verify_subject.py \
+            --subject-type "$SUBJECT_TYPE" \
+            --subject "$pending/subject.json" \
+            --signature "$pending/signature.json" \
+            --public-key "$signing_key"
+          actual="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["record_sha256"])' "$pending/subject.json")"
+          test "$actual" = "$SUBJECT_SHA256"
+          if test "$SUBJECT_TYPE" = EvidenceCheckpoint; then
+            test -f "$pending/pair-intent.json"
+            test -f "$pending/pair-intent-signature.json"
+            python3 trusted/verifier/verify_subject.py \
+              --subject-type PairIntent \
+              --subject "$pending/pair-intent.json" \
+              --signature "$pending/pair-intent-signature.json" \
+              --public-key "trusted/campaigns/$scope_id/campaign-public.pem"
+            python3 - "$pending/subject.json" "$pending/pair-intent.json" <<'PY'
+          import json, sys
+          checkpoint = json.load(open(sys.argv[1], encoding="utf-8"))
+          intent = json.load(open(sys.argv[2], encoding="utf-8"))
+          if checkpoint["pair_intent_sha256"] != intent["record_sha256"]:
+              raise SystemExit("checkpoint/PairIntent binding mismatch")
+          PY
+          fi
+          git -C candidate diff-tree --no-commit-id --name-only -r HEAD > changed.txt
+          python3 - "$SUBJECT_SHA256" changed.txt <<'PY'
+          import pathlib, sys
+          digest = sys.argv[1]
+          changed = {line.strip() for line in pathlib.Path(sys.argv[2]).read_text().splitlines() if line.strip()}
+          allowed = {
+              f"pending/{digest}/subject.json",
+              f"pending/{digest}/signature.json",
+              f"pending/{digest}/pair-intent.json",
+              f"pending/{digest}/pair-intent-signature.json",
+          }
+          if not changed or not changed <= allowed:
+              raise SystemExit("candidate commit changes files outside its pending record")
+          PY
+
+      - name: Enforce checkpoint predecessor and non-forking sequence
+        if: inputs.subject_type == 'EvidenceCheckpoint'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBJECT_SHA256: ${{ inputs.subject_sha256 }}
+        run: |
+          set -euo pipefail
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 1000 --json tagName > releases.json
+          python3 trusted/verifier/verify_sequence.py \
+            --subject "candidate/pending/$SUBJECT_SHA256/subject.json" \
+            --release-list releases.json \
+            --tag-output release-tag.txt
+
+      - name: Keyless sign and capture Rekor inclusion proof
+        env:
+          SUBJECT_TYPE: ${{ inputs.subject_type }}
+          SUBJECT_SHA256: ${{ inputs.subject_sha256 }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          cp "candidate/pending/$SUBJECT_SHA256/subject.json" release/subject.json
+          cp "candidate/pending/$SUBJECT_SHA256/signature.json" release/signature.json
+          if test -f "candidate/pending/$SUBJECT_SHA256/pair-intent.json"; then
+            cp "candidate/pending/$SUBJECT_SHA256/pair-intent.json" release/pair-intent.json
+            cp "candidate/pending/$SUBJECT_SHA256/pair-intent-signature.json" release/pair-intent-signature.json
+          fi
+          cosign sign-blob --yes --bundle release/subject.sigstore.json release/subject.json
+          identity="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/.github/workflows/anchor.yml@$GITHUB_REF"
+          python3 trusted/verifier/make_anchor_receipt.py \
+            --subject-type "$SUBJECT_TYPE" \
+            --subject release/subject.json \
+            --bundle release/subject.sigstore.json \
+            --repository "$GITHUB_REPOSITORY" \
+            --workflow-identity "$identity" \
+            --workflow-commit-sha "$GITHUB_SHA" \
+            --output release/anchor-receipt.json
+
+      - name: Publish immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBJECT_TYPE: ${{ inputs.subject_type }}
+          SUBJECT_SHA256: ${{ inputs.subject_sha256 }}
+          CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          set -euo pipefail
+          if test "$SUBJECT_TYPE" = EvidenceCheckpoint; then
+            tag="$(cat release-tag.txt)"
+          else
+            scope_id="$(python3 -c 'import json; print(json.load(open("release/subject.json"))["campaign_scope_id"])')"
+            tag="root-$scope_id-$SUBJECT_SHA256"
+          fi
+          gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$CANDIDATE_COMMIT" \
+            --title "$SUBJECT_TYPE $SUBJECT_SHA256" \
+            --notes "Consequa canonical evidence anchor. Releases must be configured immutable." \
+            release/*
