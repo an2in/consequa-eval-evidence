@@ -1,3 +1,5 @@
 pending/
 release/
+__pycache__/
+*.py[cod]
 !campaigns/.gitkeep
