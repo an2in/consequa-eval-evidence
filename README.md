@@ -20,8 +20,10 @@ GitHub OIDC workflow-SHA claim.
 Before any real campaign, an administrator must:
 
 1. Create the public repository with `main` as the default branch.
-2. Require pull requests, at least one approval, linear history, signed
-   commits, status checks, and conversation resolution on `main`.
+2. Require pull requests, linear history, signed commits, status checks, and
+   conversation resolution on `main`. Human approvals are set to zero because
+   no independent reviewer exists; using a second operator-controlled account
+   would not create independent assurance.
 3. Disable force pushes and branch deletion for `main`.
 4. Enable immutable releases and disallow Actions from approving pull
    requests.
@@ -79,3 +81,13 @@ include `source/` (`source.tar`, exact identity, `uv.lock`, SPDX SBOM), full
 also include the signed disclosure receipt. A final release additionally
 requires the aggregate, completeness certificate, raw results, and non-empty
 `ledger/intents`, `ledger/checkpoints`, and `ledger/anchor-bundles` trees.
+
+## Governance boundary
+
+There is no independent human reviewer or co-signing auditor in the campaign
+control path. The repository is controlled by the operator. Independent
+assurance therefore means after-the-fact cryptographic auditability from
+operator-root signatures, immutable release assets, GitHub workflow identity,
+and Sigstore/Rekor inclusion proofs. It does not mean that an independent human
+witnessed execution, and it cannot exclude runs outside the declared
+VM/account/harness boundary.
