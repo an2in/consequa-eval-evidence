@@ -92,6 +92,15 @@ def immutable_release_exists(repository: str, tag: str) -> bool:
     return completed.returncode == 0 and completed.stdout.strip() == "true"
 
 
+def stage_pending(checkout: Path, digest: str) -> None:
+    """Stage only the exact ignored pending record selected for publication."""
+
+    run(
+        ["git", "add", "--force", "--", f"pending/{digest}"],
+        cwd=checkout,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository", default="an2in/consequa-eval-evidence")
@@ -141,7 +150,7 @@ def main() -> int:
                     args.related_intent_signature,
                     pending / "pair-intent-signature.json",
                 )
-            run(["git", "add", "--", f"pending/{digest}"], cwd=checkout)
+            stage_pending(checkout, digest)
             run(
                 [
                     "git", "-c", "user.name=Consequa Evidence Operator",
