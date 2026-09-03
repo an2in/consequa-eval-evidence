@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "status": "superseded_pre_inference",
+  "campaign_scope_id": "84aee450-2aef-46ad-bb9d-89083435309c",
+  "disclosure_request_sha256": "acb68278117d9f175c0ebd351dfdbccc0f5093d9df8fb15a1523bc009e375a35",
+  "disclosure_receipt_sha256": "4fd8bf00061eac4a7b7a375369b17b5be2ba0ae875f60c235428dff3c903413e",
+  "reason": "baseline/helper cryptographic mismatch",
+  "terminal_facts": {
+    "pair_intents_dispatched": 0,
+    "calibration_pairs_dispatched": 0,
+    "calibration_members_dispatched": 0,
+    "model_requests": 0
+  },
+  "superseded_at_utc": "2026-09-03T03:23:01Z",
+  "record_sha256": "c72a6b640a3c49f8734127719c299a3711dcad81ec8165c8f8709208b4cbc639"
+}
