@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "subject_type": "PreInferenceSupersessionRecord",
+  "superseded_scope_id": "1b08ede3-9c92-47a4-8678-b22b9d3b5f13",
+  "superseded_campaign_set_sha256": "12f281eb3e18d8102fd849026e71f9ad45c5990a3dac402e8088b516eeeac080",
+  "superseded_evaluation_declaration_sha256": "7972ee21e139c67a0106e98ad8762c085c10ca9edd0cfada11aa3e66056e6a5f",
+  "superseded_disclosure_request_sha256": "4d06c6babfff14275568551a9f09f44d5f4bab4b5da7a1bda622b66af4ea97cf",
+  "reason": "codex_runtime_incorporation_and_reseal",
+  "terminal_facts": {
+    "dispatched_pair_intents": 0,
+    "executed_pairs": 0,
+    "dispatched_members": 0,
+    "model_requests": 0,
+    "readiness_prompts": 0,
+    "provider_egress_opened": false,
+    "oauth_active_copy_created": false
+  },
+  "created_at_utc": "2026-09-03T11:07:23Z",
+  "record_sha256": "8ea9cecc5d4abb37bfaffe9370b56255390ed57a4501d0d3977b49c53b40d59c"
+}
