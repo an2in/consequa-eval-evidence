@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "algorithm": "ed25519",
+  "namespace": "consequa-evaluation",
+  "key_id": "d5696efa2d0a742cb804c9441ea4046b9d85c61b06eb7d27deb77776f9fef0d7",
+  "subject_type": "DisclosureRequest",
+  "subject_sha256": "4d06c6babfff14275568551a9f09f44d5f4bab4b5da7a1bda622b66af4ea97cf",
+  "signed_at_utc": "2026-09-03T03:30:44Z",
+  "signature_base64": "8c80RomWvBuzOyxn5GMmfdoX2olIqkSX5LWF1tb4NSUu7SSEiooH2HR9eyDdyX+QXY4OosLgM1RfN2iScEwSBg==",
+  "record_sha256": "ec5a9d471cf01b7bbc1cbd07b25ec8fb6ea57d2a9b30a11c5d39758741411c7b"
+}
