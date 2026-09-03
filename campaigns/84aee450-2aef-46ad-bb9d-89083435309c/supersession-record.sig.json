@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "algorithm": "ed25519",
+  "namespace": "consequa-evaluation",
+  "key_id": "dd05164dfce26cd9e5850c6732606c78e341610772d34d5917fb2657814fdcf6",
+  "subject_type": "SupersessionRecord",
+  "subject_sha256": "c72a6b640a3c49f8734127719c299a3711dcad81ec8165c8f8709208b4cbc639",
+  "signed_at_utc": "2026-09-03T03:23:01Z",
+  "signature_base64": "NuoqUiIaGRtMoAvr8fijQdxY9McK2jAvAJ1kEV6bZVIumHUqpv/E3gR8ksVgLrtv6Do/jTepo0X4I5T5t+BoDQ==",
+  "record_sha256": "c70322b5971ee45c8002c70d5c70262ebf44ae6f4432c559d7688349d5002dff"
+}
