@@ -61,18 +61,18 @@ jobs:
           test -f "$pending/subject.json"
           test -f "$pending/signature.json"
           scope_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["campaign_scope_id"])' "$pending/subject.json")"
-          test -f "trusted/campaigns/$scope_id/campaign-public.pem"
-          test -f "trusted/campaigns/$scope_id/operator-root-public.pem"
-          test -f "trusted/campaigns/$scope_id/campaign-key-certificate.json"
-          test -f "trusted/campaigns/$scope_id/campaign-key-certificate.sig.json"
+          test -f "trusted/trusted/campaigns/$scope_id/campaign-public.pem"
+          test -f "trusted/trusted/campaigns/$scope_id/operator-root-public.pem"
+          test -f "trusted/trusted/campaigns/$scope_id/campaign-key-certificate.json"
+          test -f "trusted/trusted/campaigns/$scope_id/campaign-key-certificate.sig.json"
           python3 trusted/verifier/verify_subject.py \
             --subject-type CampaignKeyCertificate \
-            --subject "trusted/campaigns/$scope_id/campaign-key-certificate.json" \
-            --signature "trusted/campaigns/$scope_id/campaign-key-certificate.sig.json" \
-            --public-key "trusted/campaigns/$scope_id/operator-root-public.pem"
+            --subject "trusted/trusted/campaigns/$scope_id/campaign-key-certificate.json" \
+            --signature "trusted/trusted/campaigns/$scope_id/campaign-key-certificate.sig.json" \
+            --public-key "trusted/trusted/campaigns/$scope_id/operator-root-public.pem"
           python3 - "$scope_id" <<'PY'
           import datetime, json, pathlib, sys
-          root = pathlib.Path("trusted/campaigns") / sys.argv[1]
+          root = pathlib.Path("trusted/trusted/campaigns") / sys.argv[1]
           certificate = json.loads((root / "campaign-key-certificate.json").read_text())
           if certificate["campaign_scope_id"] != sys.argv[1]:
               raise SystemExit("campaign key certificate scope mismatch")
@@ -86,10 +86,10 @@ jobs:
           PY
           case "$SUBJECT_TYPE" in
             PairIntent|EvidenceCheckpoint)
-              signing_key="trusted/campaigns/$scope_id/campaign-public.pem"
+              signing_key="trusted/trusted/campaigns/$scope_id/campaign-public.pem"
               ;;
             EvaluationDeclaration|DisclosureRequest|DisclosureReceipt|CampaignKeyCertificate|EvidenceReleaseManifest|CompletenessCertificate)
-              signing_key="trusted/campaigns/$scope_id/operator-root-public.pem"
+              signing_key="trusted/trusted/campaigns/$scope_id/operator-root-public.pem"
               ;;
             *)
               echo "unsupported subject type" >&2
@@ -110,7 +110,7 @@ jobs:
               --subject-type PairIntent \
               --subject "$pending/pair-intent.json" \
               --signature "$pending/pair-intent-signature.json" \
-              --public-key "trusted/campaigns/$scope_id/campaign-public.pem"
+              --public-key "trusted/trusted/campaigns/$scope_id/campaign-public.pem"
             python3 - "$pending/subject.json" "$pending/pair-intent.json" <<'PY'
           import json, sys
           checkpoint = json.load(open(sys.argv[1], encoding="utf-8"))
