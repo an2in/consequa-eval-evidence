@@ -65,7 +65,7 @@ jobs:
           test -f "trusted/campaigns/$scope_id/operator-root-public.pem"
           test -f "trusted/campaigns/$scope_id/campaign-key-certificate.json"
           test -f "trusted/campaigns/$scope_id/campaign-key-certificate.sig.json"
-          python3 trusted/verifier/verify_subject.py \
+          python3 verifier/verify_subject.py \
             --subject-type CampaignKeyCertificate \
             --subject "trusted/campaigns/$scope_id/campaign-key-certificate.json" \
             --signature "trusted/campaigns/$scope_id/campaign-key-certificate.sig.json" \
@@ -96,7 +96,7 @@ jobs:
               exit 1
               ;;
           esac
-          python3 trusted/verifier/verify_subject.py \
+          python3 verifier/verify_subject.py \
             --subject-type "$SUBJECT_TYPE" \
             --subject "$pending/subject.json" \
             --signature "$pending/signature.json" \
@@ -106,7 +106,7 @@ jobs:
           if test "$SUBJECT_TYPE" = EvidenceCheckpoint; then
             test -f "$pending/pair-intent.json"
             test -f "$pending/pair-intent-signature.json"
-            python3 trusted/verifier/verify_subject.py \
+            python3 verifier/verify_subject.py \
               --subject-type PairIntent \
               --subject "$pending/pair-intent.json" \
               --signature "$pending/pair-intent-signature.json" \
@@ -142,7 +142,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release list --repo "$GITHUB_REPOSITORY" --limit 1000 --json tagName > releases.json
-          python3 trusted/verifier/verify_sequence.py \
+          python3 verifier/verify_sequence.py \
             --subject "candidate/pending/$SUBJECT_SHA256/subject.json" \
             --release-list releases.json \
             --tag-output release-tag.txt
@@ -162,7 +162,7 @@ jobs:
           fi
           cosign sign-blob --yes --bundle release/subject.sigstore.json release/subject.json
           identity="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/.github/workflows/anchor.yml@$GITHUB_REF"
-          python3 trusted/verifier/make_anchor_receipt.py \
+          python3 verifier/make_anchor_receipt.py \
             --subject-type "$SUBJECT_TYPE" \
             --subject release/subject.json \
             --bundle release/subject.sigstore.json \
