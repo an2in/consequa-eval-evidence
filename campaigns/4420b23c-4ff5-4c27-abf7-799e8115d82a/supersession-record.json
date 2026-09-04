@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "subject_type": "PreInferenceSupersessionRecord",
+  "superseded_scope_id": "4420b23c-4ff5-4c27-abf7-799e8115d82a",
+  "superseded_campaign_set_sha256": "3fa699018284578e673aa2916ae16c26e9a28813667f4ff09e669aa3b168c2ed",
+  "superseded_evaluation_declaration_sha256": "148fe2c8debc262a9d968b0c85446c74a4eb7b4e2f642854ea7dff862cdf6f74",
+  "superseded_disclosure_request_sha256": "7802bf97b6b892d6caaf4b0bd11066cb1b2fa04618c0eaf5be7d5e1bfc346e33",
+  "reason": "readiness_cost_accounting_fix_and_refreeze",
+  "terminal_facts": {
+    "dispatched_pair_intents": 0,
+    "executed_pairs": 0,
+    "dispatched_members": 0,
+    "model_requests": 0,
+    "readiness_prompts": 0,
+    "provider_egress_opened": false,
+    "oauth_active_copy_created": false
+  },
+  "created_at_utc": "2026-09-04T04:08:47Z",
+  "record_sha256": "aa7fa71584ba6badcbbedee0a37726fa7ba93670d8c6ebfda7df4574bc8886a2"
+}
