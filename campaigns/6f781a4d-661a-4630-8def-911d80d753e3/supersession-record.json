@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "subject_type": "AbortedPairSupersessionRecord",
+  "superseded_scope_id": "6f781a4d-661a-4630-8def-911d80d753e3",
+  "superseded_campaign_set_sha256": "543bbbb5fd28b6d0a6cf3aaa2acbac2df30801b458f0ab5543201d2d26d018af",
+  "superseded_evaluation_declaration_sha256": "c06d01bba1cc8b47f154860dfc04367dd43ec14631f036c5f98c0de4417fe842",
+  "superseded_disclosure_request_sha256": "6d04ed3e37c6dc7cfd332243a981834fb78c5d6129107fb1caf93a3aa0358743",
+  "dispatched_pair_intent_sha256": "46a6a9fae416e648c1e64c057aed2c14c78d98d007b869fcd7499d65e64de1c6",
+  "pre_checkpoint_sha256": "c5b32bc52e5c25356ccfad4d447ef769e1739805c07728193fa75865b9164a29",
+  "post_pair_checkpoint_sha256": "1ede75987603f77786d9bf225765a81f7e03312b2e62dbfdc32350dfb62edaba",
+  "post_pair_terminal_status": "incomplete",
+  "reason": "journal_allowlist_missing_oauth_lease_states",
+  "fixed_in_source_commit": "e1e73cf480927f2c6816d167a202813f1cc75ee2",
+  "terminal_facts": {
+    "dispatched_pair_intents": 1,
+    "executed_pairs": 0,
+    "dispatched_members": 0,
+    "model_requests": 1,
+    "readiness_prompts": 1,
+    "readiness_response_id": "resp_003e3d319a5b45a2016a9a47d0307087d0a792c8f7576a125f",
+    "scenario_prompts": 0,
+    "member_transcripts": 0,
+    "provider_egress_opened": false,
+    "oauth_pair_checkout_performed": false
+  },
+  "created_at_utc": "2026-09-04T04:33:15Z",
+  "record_sha256": "76e4ae1e37907f3a4e6d440243d0a3db45ffac0ba044e2d995a36ebcba4e6032"
+}
